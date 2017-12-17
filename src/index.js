@@ -59,6 +59,7 @@ class YeelightSearch extends EventEmitter {
    * refresh lights sending a new m-search
    */
   refresh() {
+    this.yeelights = []
     this.client.search('wifi_bulb');
   }
 }
