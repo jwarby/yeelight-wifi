@@ -164,7 +164,7 @@ var Yeelight = function (_EventEmitter) {
 
           if (!id) {
             _this3.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
-            _this3.emit('notifcation', json);
+            _this3.emit('notification', json);
             return;
           }
 

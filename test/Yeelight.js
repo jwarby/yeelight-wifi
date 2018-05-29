@@ -95,7 +95,7 @@ describe('Yeelight', () => {
       });
 
       it('without id', (done) => {
-        yeelight.once('notifcation', (json) => {
+        yeelight.once('notification', (json) => {
           expect(json).to.not.be.undefined;
           done();
         });
