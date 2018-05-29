@@ -80,7 +80,7 @@ var Yeelight = function (_EventEmitter) {
 
     _this.socket = new _net2.default.Socket();
 
-    _this.socket.on('end', _this.formatResponse.bind(_this));
+    _this.socket.on('data', _this.formatResponse.bind(_this));
 
     _this.socket.connect(_this.port, _this.hostname, function () {
       _this.log('connected to ' + _this.name + ' ' + _this.hostname + ':' + _this.port);
@@ -149,30 +149,38 @@ var Yeelight = function (_EventEmitter) {
 
   }, {
     key: 'formatResponse',
-    value: function formatResponse(resp) {
-      try {
-        var json = JSON.parse(resp);
-        var id = json.id;
-        var result = json.result;
+    value: function formatResponse(data) {
+      var _this3 = this;
 
-        if (!id) {
-          this.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
-          this.emit('notifcation', json);
-          return;
+      var lines = data.toString().split(/\r?\n/g);
+
+      lines.filter(function (l) {
+        return l;
+      }).forEach(function (resp) {
+        try {
+          var json = JSON.parse(resp);
+          var id = json.id;
+          var result = json.result;
+
+          if (!id) {
+            _this3.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
+            _this3.emit('notifcation', json);
+            return;
+          }
+
+          _this3.log('got response: ' + resp.toString().replace(/\r\n/, ''));
+
+          if (json && json.error) {
+            var error = new Error(json.error.message);
+            error.code = json.error.code;
+            _this3.emit('error', id, error);
+          } else {
+            _this3.emit('response', id, result);
+          }
+        } catch (ex) {
+          _this3.emit('error', ex);
         }
-
-        this.log('got response: ' + resp.toString().replace(/\r\n/, ''));
-
-        if (json && json.error) {
-          var error = new Error(json.error.message);
-          error.code = json.error.code;
-          this.emit('error', id, error);
-        } else {
-          this.emit('response', id, result);
-        }
-      } catch (ex) {
-        this.emit('error', ex);
-      }
+      });
     }
 
     /**
