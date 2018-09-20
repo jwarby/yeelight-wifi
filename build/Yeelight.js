@@ -86,6 +86,10 @@ var Yeelight = function (_EventEmitter) {
       _this.log('connected to ' + _this.name + ' ' + _this.hostname + ':' + _this.port);
       _this.emit('connected');
     });
+
+    _this.socket.on('close', function (hadError) {
+      return _this.emit('disconnected', { hadError: hadError });
+    });
     return _this;
   }
 

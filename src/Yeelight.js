@@ -50,6 +50,8 @@ export default class Yeelight extends EventEmitter {
       this.log(`connected to ${this.name} ${this.hostname}:${this.port}`);
       this.emit('connected');
     });
+
+    this.socket.on('close', hadError => this.emit('disconnected', { hadError }));
   }
 
   /**
