@@ -93,27 +93,45 @@ var Yeelight = function (_EventEmitter) {
     return _this;
   }
 
-  /**
-   * sendRequest validates the given params and send the request to the Yeelight
-   * @private
-   *
-   * @param {object} method method to be called 'set_power'
-   * @param {object} params array with params ['on', 'smooth', '1000']
-   * @param {object} schema schema for validation
-   */
-
-
   _createClass(Yeelight, [{
+    key: 'reconnect',
+    value: function reconnect() {
+      var _this2 = this;
+
+      this.socket = new _net2.default.Socket();
+
+      this.socket.on('data', this.formatResponse.bind(this));
+
+      this.socket.connect(this.port, this.hostname, function () {
+        _this2.log('connected to ' + _this2.name + ' ' + _this2.hostname + ':' + _this2.port);
+        _this2.emit('connected');
+      });
+
+      this.socket.on('close', function (hadError) {
+        return _this2.emit('disconnected', { hadError: hadError });
+      });
+    }
+
+    /**
+     * sendRequest validates the given params and send the request to the Yeelight
+     * @private
+     *
+     * @param {object} method method to be called 'set_power'
+     * @param {object} params array with params ['on', 'smooth', '1000']
+     * @param {object} schema schema for validation
+     */
+
+  }, {
     key: 'sendRequest',
     value: function sendRequest(method, params, schema) {
-      var _this2 = this;
+      var _this3 = this;
 
       return new Promise(function (resolve, reject) {
         if (!schema) {
           schema = _joi2.default.any(); //eslint-disable-line
         }
 
-        if (!_this2.supports.includes(method)) {
+        if (!_this3.supports.includes(method)) {
           reject(new Error('unsupported method: ' + method));
           return;
         }
@@ -127,18 +145,18 @@ var Yeelight = function (_EventEmitter) {
           var req = JSON.stringify({
             method: method,
             params: value,
-            id: _this2.reqCount
+            id: _this3.reqCount
           });
-          _this2.log('sending req: ' + req);
+          _this3.log('sending req: ' + req);
 
-          _this2.socket.write(req + '\r\n', function (err) {
+          _this3.socket.write(req + '\r\n', function (err) {
             if (err) {
               reject(err);
               return;
             }
             resolve();
           });
-          _this2.reqCount += 1;
+          _this3.reqCount += 1;
         });
       });
     }
@@ -154,7 +172,7 @@ var Yeelight = function (_EventEmitter) {
   }, {
     key: 'formatResponse',
     value: function formatResponse(data) {
-      var _this3 = this;
+      var _this4 = this;
 
       var lines = data.toString().split(/\r?\n/g);
 
@@ -167,22 +185,22 @@ var Yeelight = function (_EventEmitter) {
           var result = json.result;
 
           if (!id) {
-            _this3.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
-            _this3.emit('notification', json);
+            _this4.log('got response without id: ' + resp.toString().replace(/\r\n/, ''));
+            _this4.emit('notification', json);
             return;
           }
 
-          _this3.log('got response: ' + resp.toString().replace(/\r\n/, ''));
+          _this4.log('got response: ' + resp.toString().replace(/\r\n/, ''));
 
           if (json && json.error) {
             var error = new Error(json.error.message);
             error.code = json.error.code;
-            _this3.emit('error', id, error);
+            _this4.emit('error', id, error);
           } else {
-            _this3.emit('response', id, result);
+            _this4.emit('response', id, result);
           }
         } catch (ex) {
-          _this3.emit('error', ex);
+          _this4.emit('error', ex);
         }
       });
     }
