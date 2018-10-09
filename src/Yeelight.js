@@ -42,16 +42,7 @@ export default class Yeelight extends EventEmitter {
     this.reqCount = 1;
     this.log = debug(`Yeelight-${this.name}`);
 
-    this.socket = new net.Socket();
-
-    this.socket.on('data', this.formatResponse.bind(this));
-
-    this.socket.connect(this.port, this.hostname, () => {
-      this.log(`connected to ${this.name} ${this.hostname}:${this.port}`);
-      this.emit('connected');
-    });
-
-    this.socket.on('close', hadError => this.emit('disconnected', { hadError }));
+    this.reconnect();
   }
 
   reconnect() {
