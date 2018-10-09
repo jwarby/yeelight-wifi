@@ -78,18 +78,7 @@ var Yeelight = function (_EventEmitter) {
     _this.reqCount = 1;
     _this.log = (0, _debug2.default)('Yeelight-' + _this.name);
 
-    _this.socket = new _net2.default.Socket();
-
-    _this.socket.on('data', _this.formatResponse.bind(_this));
-
-    _this.socket.connect(_this.port, _this.hostname, function () {
-      _this.log('connected to ' + _this.name + ' ' + _this.hostname + ':' + _this.port);
-      _this.emit('connected');
-    });
-
-    _this.socket.on('close', function (hadError) {
-      return _this.emit('disconnected', { hadError: hadError });
-    });
+    _this.reconnect();
     return _this;
   }
 
@@ -100,6 +89,9 @@ var Yeelight = function (_EventEmitter) {
 
       this.socket = new _net2.default.Socket();
 
+      this.socket.on('error', function (err) {
+        return _this2.emit('error', err);
+      });
       this.socket.on('data', this.formatResponse.bind(this));
 
       this.socket.connect(this.port, this.hostname, function () {
